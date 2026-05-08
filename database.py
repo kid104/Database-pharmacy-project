@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash
 
 DB_PATH = os.environ.get('DB_PATH', 'pharmacy.db')
 
+os.makedirs(os.path.dirname(os.path.abspath(DB_PATH)), exist_ok=True)
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
