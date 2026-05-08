@@ -3,7 +3,7 @@ services:
     name: kaak-pharmacy
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+   startCommand: python -m gunicorn app:app
     envVars:
       - key: SECRET_KEY
         generateValue: true
