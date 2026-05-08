@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Sales Returns — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Sales Returns</h1>
+  <button class="btn btn-primary" onclick="openModal('returnModal')">+ Process Return</button>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>Return#</th><th>TXN#</th><th>Original Amount</th><th>Refund</th><th>Reason</th><th>Processed By</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for r in returns %}
+      <tr>
+        <td>RET-{{ r.return_id }}</td>
+        <td>TXN-{{ r.transaction_id }}</td>
+        <td>${{ "%.2f"|format(r.original_amount) }}</td>
+        <td><strong>${{ "%.2f"|format(r.refund_amount) }}</strong></td>
+        <td>{{ r.reason or '—' }}</td>
+        <td>{{ r.processed_by }}</td>
+        <td>{{ r.return_date[:16] }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">No returns recorded</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Return Modal -->
+<div id="returnModal" class="modal">
+  <div class="modal-content">
+    <h3>Process Sales Return</h3>
+    <form method="POST">
+      <div class="form-group">
+        <label>Original Transaction *</label>
+        <select name="transaction_id" required>
+          <option value="">Select transaction...</option>
+          {% for t in transactions %}
+          <option value="{{ t.transaction_id }}">
+            TXN-{{ t.transaction_id }} — ${{ "%.2f"|format(t.net_amount) }} — {{ t.transaction_date[:10] }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Refund Amount ($) *</label>
+        <input type="number" name="refund_amount" step="0.01" min="0" required/>
+      </div>
+      <div class="form-group">
+        <label>Reason for Return</label>
+        <textarea name="reason" rows="2" placeholder="Describe the reason..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Process Return</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('returnModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

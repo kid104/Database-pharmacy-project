@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Audit Logs — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Audit Logs</h1>
+</div>
+
+<form method="GET" class="search-bar">
+  <select name="table">
+    <option value="">All Tables</option>
+    {% for t in tables %}
+    <option value="{{ t.table_affected }}"
+      {% if table_filter == t.table_affected %}selected{% endif %}>
+      {{ t.table_affected }}
+    </option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-secondary">Filter</button>
+  <a href="{{ url_for('audit_logs') }}" class="btn btn-secondary">Clear</a>
+</form>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>Log#</th><th>Employee</th><th>Action</th><th>Table</th><th>IP Address</th><th>Timestamp</th></tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.log_id }}</td>
+        <td>{{ log.employee_name }}</td>
+        <td>{{ log.action_performed }}</td>
+        <td><span class="badge badge-info">{{ log.table_affected or '—' }}</span></td>
+        <td>{{ log.ip_address or '—' }}</td>
+        <td>{{ log.timestamp[:16] }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="empty">No audit log entries found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

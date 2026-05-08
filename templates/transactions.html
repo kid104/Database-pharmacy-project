@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Sales — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Sales / Transactions</h1>
+  <button class="btn btn-primary" onclick="openModal('saleModal')">+ New Sale</button>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>TXN#</th><th>Patient</th><th>Cashier</th>
+        <th>Total</th><th>Tax</th><th>Discount</th><th>Net</th><th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>TXN-{{ t.transaction_id }}</td>
+        <td>{{ t.patient_name }}</td>
+        <td>{{ t.cashier }}</td>
+        <td>${{ "%.2f"|format(t.total_amount) }}</td>
+        <td>${{ "%.2f"|format(t.tax_amount) }}</td>
+        <td>${{ "%.2f"|format(t.discount_amount) }}</td>
+        <td><strong>${{ "%.2f"|format(t.net_amount) }}</strong></td>
+        <td>{{ t.transaction_date[:16] }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="empty">No transactions found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- New Sale Modal -->
+<div id="saleModal" class="modal modal-large">
+  <div class="modal-content">
+    <h3>New Sale</h3>
+    <form method="POST" id="saleForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Patient (optional — leave blank for walk-in)</label>
+          <select name="patient_id">
+            <option value="">Walk-in Customer</option>
+            {% for p in patients %}
+            <option value="{{ p.patient_id }}">{{ p.first_name }} {{ p.last_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Discount ($)</label>
+          <input type="number" name="discount" value="0" min="0" step="0.01"/>
+        </div>
+      </div>
+
+      <h4>Sale Items</h4>
+      <div id="sale-items">
+        <div class="sale-item-row">
+          <select name="batch_id[]" class="batch-select" onchange="updatePrice(this)">
+            <option value="">Select product...</option>
+            {% for b in batches %}
+            <option value="{{ b.batch_id }}" data-price="{{ b.selling_price }}">
+              {{ b.product_name }} ({{ b.batch_number }}) — ${{ "%.2f"|format(b.selling_price) }} — Stock: {{ b.current_stock }}
+            </option>
+            {% endfor %}
+          </select>
+          <input type="number" name="quantity[]" placeholder="Qty" min="1" value="1"
+                 class="qty-input" onchange="calcTotal()"/>
+          <span class="item-price">$0.00</span>
+          <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(this)">✕</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-secondary" onclick="addSaleItem()" style="margin-top:8px">
+        + Add Item
+      </button>
+
+      <div class="sale-summary">
+        <span>Subtotal: <strong id="subtotal">$0.00</strong></span>
+        <span>Tax (16%): <strong id="tax-display">$0.00</strong></span>
+        <span>Net Total: <strong id="net-total">$0.00</strong></span>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Complete Sale</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('saleModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const batchOptions = `{% for b in batches %}<option value="{{ b.batch_id }}" data-price="{{ b.selling_price }}">{{ b.product_name }} ({{ b.batch_number }}) — ${{ "%.2f"|format(b.selling_price) }} — Stock: {{ b.current_stock }}</option>{% endfor %}`;
+
+function addSaleItem() {
+  const container = document.getElementById('sale-items');
+  const row = document.createElement('div');
+  row.className = 'sale-item-row';
+  row.innerHTML = `
+    <select name="batch_id[]" class="batch-select" onchange="updatePrice(this)">
+      <option value="">Select product...</option>
+      ${batchOptions}
+    </select>
+    <input type="number" name="quantity[]" placeholder="Qty" min="1" value="1"
+           class="qty-input" onchange="calcTotal()"/>
+    <span class="item-price">$0.00</span>
+    <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(this)">✕</button>`;
+  container.appendChild(row);
+}
+
+function removeItem(btn) {
+  btn.closest('.sale-item-row').remove();
+  calcTotal();
+}
+
+function updatePrice(sel) {
+  const opt   = sel.options[sel.selectedIndex];
+  const price = parseFloat(opt.dataset.price || 0);
+  const row   = sel.closest('.sale-item-row');
+  const qty   = parseInt(row.querySelector('.qty-input').value) || 1;
+  row.querySelector('.item-price').textContent = '$' + (price * qty).toFixed(2);
+  calcTotal();
+}
+
+function calcTotal() {
+  let sub = 0;
+  document.querySelectorAll('.sale-item-row').forEach(row => {
+    const sel   = row.querySelector('.batch-select');
+    const price = parseFloat(sel.options[sel.selectedIndex]?.dataset.price || 0);
+    const qty   = parseInt(row.querySelector('.qty-input').value) || 0;
+    const line  = price * qty;
+    row.querySelector('.item-price').textContent = '$' + line.toFixed(2);
+    sub += line;
+  });
+  const discount = parseFloat(document.querySelector('[name="discount"]').value) || 0;
+  const tax      = sub * 0.16;
+  const net      = sub + tax - discount;
+  document.getElementById('subtotal').textContent    = '$' + sub.toFixed(2);
+  document.getElementById('tax-display').textContent = '$' + tax.toFixed(2);
+  document.getElementById('net-total').textContent   = '$' + Math.max(net, 0).toFixed(2);
+}
+</script>
+{% endblock %}

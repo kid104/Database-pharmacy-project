@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Inventory — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Inventory</h1>
+  <button class="btn btn-primary" onclick="openModal('adjModal')">+ Adjust Stock</button>
+</div>
+
+<div class="card">
+  <h3>Current Stock by Batch</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th><th>SKU</th><th>Category</th><th>Batch#</th>
+        <th>Expiry</th><th>Cost</th><th>Selling</th><th>Stock</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in inventory %}
+      <tr class="{% if item.current_stock < 50 %}warn-row{% endif %}
+                 {% if item.expiry_date and item.expiry_date <= '2025-06-01' %}danger-row{% endif %}">
+        <td><strong>{{ item.product_name }}</strong></td>
+        <td>{{ item.sku_code or '—' }}</td>
+        <td>{{ item.category or '—' }}</td>
+        <td>{{ item.batch_number or '—' }}</td>
+        <td>{{ item.expiry_date or '—' }}</td>
+        <td>${{ "%.2f"|format(item.cost_price or 0) }}</td>
+        <td>${{ "%.2f"|format(item.selling_price or 0) }}</td>
+        <td>
+          {% if item.current_stock < 20 %}
+            <span class="badge badge-danger">{{ item.current_stock }}</span>
+          {% elif item.current_stock < 50 %}
+            <span class="badge badge-warn">{{ item.current_stock }}</span>
+          {% else %}
+            <span class="badge badge-success">{{ item.current_stock }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" class="empty">No inventory records found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Recent Adjustments</h3>
+  <table>
+    <thead>
+      <tr><th>Product</th><th>Batch</th><th>Type</th><th>Qty</th><th>Adjusted By</th><th>Date</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      {% for adj in adjustments %}
+      <tr>
+        <td>{{ adj.product_name }}</td>
+        <td>{{ adj.batch_number }}</td>
+        <td>
+          {% if adj.adjustment_type == 'Addition' %}
+            <span class="badge badge-success">+ Addition</span>
+          {% else %}
+            <span class="badge badge-danger">- Reduction</span>
+          {% endif %}
+        </td>
+        <td>{{ adj.quantity_adjusted }}</td>
+        <td>{{ adj.adjusted_by }}</td>
+        <td>{{ adj.adjustment_date[:16] }}</td>
+        <td>{{ adj.notes or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">No adjustments recorded</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Adjust Stock Modal -->
+<div id="adjModal" class="modal">
+  <div class="modal-content">
+    <h3>Adjust Stock</h3>
+    <form method="POST">
+      <div class="form-group">
+        <label>Select Batch *</label>
+        <select name="batch_id" required>
+          <option value="">Select batch...</option>
+          {% for item in inventory %}
+          <option value="{{ item.batch_id }}">
+            {{ item.product_name }} — Batch {{ item.batch_number or item.batch_id }} (Stock: {{ item.current_stock }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Adjustment Type *</label>
+          <select name="adjustment_type" required>
+            <option value="Addition">Addition (increase stock)</option>
+            <option value="Reduction">Reduction (decrease stock)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantity *</label>
+          <input type="number" name="quantity" min="1" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes / Reason</label>
+        <textarea name="notes" rows="2" placeholder="e.g. Damaged goods, stocktake correction..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Apply Adjustment</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('adjModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

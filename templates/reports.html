@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Reports — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Reports &amp; Analytics</h1>
+</div>
+
+<!-- Summary KPIs -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">📊</div>
+    <div class="stat-value">${{ "%.2f"|format(avg_sale) }}</div>
+    <div class="stat-label">Avg Sale Value</div>
+  </div>
+  <div class="stat-card highlight">
+    <div class="stat-icon">💰</div>
+    <div class="stat-value">${{ "%.2f"|format(max_sale) }}</div>
+    <div class="stat-label">Highest Single Sale</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">📦</div>
+    <div class="stat-value">{{ low_stock|length }}</div>
+    <div class="stat-label">Low Stock Products</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">⚠</div>
+    <div class="stat-value">{{ expiring|length }}</div>
+    <div class="stat-label">Expiring (60 days)</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Daily Sales -->
+  <div class="card">
+    <h3>Daily Sales (Last 30 Days)</h3>
+    <table>
+      <thead><tr><th>Date</th><th>Transactions</th><th>Revenue</th></tr></thead>
+      <tbody>
+        {% for d in daily_sales %}
+        <tr>
+          <td>{{ d.sale_date }}</td>
+          <td>{{ d.total_txns }}</td>
+          <td><strong>${{ "%.2f"|format(d.total_revenue) }}</strong></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="empty">No sales data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Sales by Category -->
+  <div class="card">
+    <h3>Revenue by Category</h3>
+    <table>
+      <thead><tr><th>Category</th><th>Transactions</th><th>Revenue</th></tr></thead>
+      <tbody>
+        {% for row in sales_by_category %}
+        <tr>
+          <td>{{ row.category }}</td>
+          <td>{{ row.txn_count }}</td>
+          <td><strong>${{ "%.2f"|format(row.revenue or 0) }}</strong></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="empty">No data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Top Products -->
+  <div class="card">
+    <h3>Top 10 Selling Products</h3>
+    <table>
+      <thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th></tr></thead>
+      <tbody>
+        {% for p in top_products %}
+        <tr>
+          <td>{{ p.product_name }}</td>
+          <td>{{ p.units_sold }}</td>
+          <td>${{ "%.2f"|format(p.revenue or 0) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="empty">No sales data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Top Staff -->
+  <div class="card">
+    <h3>Top Performing Staff</h3>
+    <table>
+      <thead><tr><th>Employee</th><th>Sales Count</th><th>Total Revenue</th></tr></thead>
+      <tbody>
+        {% for s in top_staff %}
+        <tr>
+          <td>{{ s.full_name }}</td>
+          <td>{{ s.sales_count }}</td>
+          <td>${{ "%.2f"|format(s.total_sales or 0) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="empty">No data</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Low Stock -->
+  <div class="card">
+    <h3>🔴 Low Stock Products (below 50)</h3>
+    <table>
+      <thead><tr><th>Product</th><th>Total Stock</th></tr></thead>
+      <tbody>
+        {% for item in low_stock %}
+        <tr class="danger-row">
+          <td>{{ item.product_name }}</td>
+          <td><span class="badge badge-danger">{{ item.stock }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2" class="empty">All products adequately stocked</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Expiring -->
+  <div class="card">
+    <h3>⚠ Expiring Within 60 Days</h3>
+    <table>
+      <thead><tr><th>Product</th><th>Batch</th><th>Expiry</th><th>Stock</th></tr></thead>
+      <tbody>
+        {% for item in expiring %}
+        <tr class="warn-row">
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.batch_number }}</td>
+          <td>{{ item.expiry_date }}</td>
+          <td>{{ item.current_stock }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="empty">No batches expiring soon</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

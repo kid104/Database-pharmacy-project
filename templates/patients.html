@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Patients — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Patients</h1>
+  <button class="btn btn-primary" onclick="openModal('addModal')">+ Add Patient</button>
+</div>
+
+<form method="GET" class="search-bar">
+  <input type="text" name="search" value="{{ search }}" placeholder="Search by name or phone..."/>
+  <button type="submit" class="btn btn-secondary">Search</button>
+  <a href="{{ url_for('patients') }}" class="btn btn-secondary">Clear</a>
+</form>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>DOB</th><th>Gender</th><th>Phone</th><th>Allergies</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+      <tr>
+        <td>{{ p.patient_id }}</td>
+        <td><strong>{{ p.first_name }} {{ p.last_name }}</strong></td>
+        <td>{{ p.dob or '—' }}</td>
+        <td>{{ p.gender or '—' }}</td>
+        <td>{{ p.phone or '—' }}</td>
+        <td>
+          {% if p.allergies and p.allergies != 'None' %}
+            <span class="badge badge-warn">{{ p.allergies }}</span>
+          {% else %}
+            None
+          {% endif %}
+        </td>
+        <td>
+          <button class="btn btn-sm btn-secondary"
+            onclick="editPatient(
+              {{ p.patient_id }},
+              '{{ p.first_name|replace("'","") }}',
+              '{{ p.last_name|replace("'","") }}',
+              '{{ p.dob or "" }}',
+              '{{ p.gender or "" }}',
+              '{{ p.phone or "" }}',
+              '{{ (p.medical_history or "")|replace("'","")|replace("\n"," ") }}',
+              '{{ (p.allergies or "")|replace("'","") }}')">Edit</button>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">No patients found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Patient Modal -->
+<div id="addModal" class="modal">
+  <div class="modal-content">
+    <h3>Add New Patient</h3>
+    <form method="POST">
+      <input type="hidden" name="action" value="add"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" name="first_name" required/>
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" name="last_name" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" name="dob"/>
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select name="gender">
+            <option value="">Select...</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone"/>
+      </div>
+      <div class="form-group">
+        <label>Medical History</label>
+        <textarea name="medical_history" rows="2" placeholder="Known conditions..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Known Allergies</label>
+        <input type="text" name="allergies" placeholder="e.g. Penicillin, Aspirin or None"/>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Add Patient</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Patient Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>Edit Patient</h3>
+    <form method="POST">
+      <input type="hidden" name="action" value="edit"/>
+      <input type="hidden" name="patient_id" id="edit_patient_id"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" name="first_name" id="edit_first_name" required/>
+        </div>
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" name="last_name" id="edit_last_name" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" name="dob" id="edit_dob"/>
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select name="gender" id="edit_gender">
+            <option value="">Select...</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone" id="edit_phone"/>
+      </div>
+      <div class="form-group">
+        <label>Medical History</label>
+        <textarea name="medical_history" id="edit_medical_history" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Known Allergies</label>
+        <input type="text" name="allergies" id="edit_allergies"/>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

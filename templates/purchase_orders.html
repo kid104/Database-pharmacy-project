@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Purchase Orders — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Purchase Orders</h1>
+  <button class="btn btn-primary" onclick="openModal('poModal')">+ Create PO</button>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>PO#</th><th>Supplier</th><th>Ordered By</th><th>Date</th><th>Total</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for po in purchase_orders %}
+      <tr>
+        <td>PO-{{ po.po_id }}</td>
+        <td><strong>{{ po.company_name }}</strong></td>
+        <td>{{ po.ordered_by }}</td>
+        <td>{{ po.order_date }}</td>
+        <td>${{ "%.2f"|format(po.total_cost) }}</td>
+        <td>
+          {% if po.status == 'Received' %}
+            <span class="badge badge-success">Received</span>
+          {% elif po.status == 'Cancelled' %}
+            <span class="badge badge-danger">Cancelled</span>
+          {% else %}
+            <span class="badge badge-warn">Pending</span>
+          {% endif %}
+        </td>
+        <td class="action-btns">
+          {% if po.status == 'Pending' %}
+          <form method="POST" style="display:inline"
+            onsubmit="return confirm('Mark PO-{{ po.po_id }} as received and update stock?')">
+            <input type="hidden" name="action" value="receive"/>
+            <input type="hidden" name="po_id" value="{{ po.po_id }}"/>
+            <button type="submit" class="btn btn-sm btn-primary">Receive</button>
+          </form>
+          <form method="POST" style="display:inline">
+            <input type="hidden" name="action" value="cancel"/>
+            <input type="hidden" name="po_id" value="{{ po.po_id }}"/>
+            <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">No purchase orders found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Create PO Modal -->
+<div id="poModal" class="modal modal-large">
+  <div class="modal-content">
+    <h3>Create Purchase Order</h3>
+    <form method="POST">
+      <input type="hidden" name="action" value="create"/>
+      <div class="form-group">
+        <label>Supplier *</label>
+        <select name="supplier_id" required>
+          <option value="">Select supplier...</option>
+          {% for s in suppliers %}
+          <option value="{{ s.supplier_id }}">{{ s.company_name }} — {{ s.contact_person }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <h4>Order Items</h4>
+      <div id="po-items">
+        <div class="po-item-row form-row">
+          <div class="form-group" style="flex:2">
+            <select name="product_id[]" required>
+              <option value="">Select product...</option>
+              {% for p in products %}
+              <option value="{{ p.product_id }}">{{ p.product_name }} ({{ p.sku_code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="number" name="quantity[]" placeholder="Qty" min="1" required/>
+          </div>
+          <div class="form-group">
+            <input type="number" name="unit_cost[]" placeholder="Unit cost $" step="0.01" min="0" required/>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger" onclick="removePOItem(this)">✕</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-secondary" onclick="addPOItem()" style="margin-top:8px">
+        + Add Item
+      </button>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Create Purchase Order</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('poModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const productOptions = `{% for p in products %}<option value="{{ p.product_id }}">{{ p.product_name }} ({{ p.sku_code }})</option>{% endfor %}`;
+
+function addPOItem() {
+  const container = document.getElementById('po-items');
+  const row = document.createElement('div');
+  row.className = 'po-item-row form-row';
+  row.innerHTML = `
+    <div class="form-group" style="flex:2">
+      <select name="product_id[]" required>
+        <option value="">Select product...</option>${productOptions}
+      </select>
+    </div>
+    <div class="form-group">
+      <input type="number" name="quantity[]" placeholder="Qty" min="1" required/>
+    </div>
+    <div class="form-group">
+      <input type="number" name="unit_cost[]" placeholder="Unit cost $" step="0.01" min="0" required/>
+    </div>
+    <button type="button" class="btn btn-sm btn-danger" onclick="removePOItem(this)">✕</button>`;
+  container.appendChild(row);
+}
+
+function removePOItem(btn) {
+  const rows = document.querySelectorAll('.po-item-row');
+  if (rows.length > 1) btn.closest('.po-item-row').remove();
+}
+</script>
+{% endblock %}

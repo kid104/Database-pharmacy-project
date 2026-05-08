@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Employees — PharmaSys{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Employees</h1>
+  <a href="{{ url_for('register') }}" class="btn btn-primary">+ Add Employee</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Full Name</th><th>Username</th><th>Role</th><th>License</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for emp in employees %}
+      <tr>
+        <td>{{ emp.employee_id }}</td>
+        <td><strong>{{ emp.full_name }}</strong></td>
+        <td>{{ emp.username }}</td>
+        <td><span class="badge badge-info">{{ emp.role_name }}</span></td>
+        <td>{{ emp.license_number or '—' }}</td>
+        <td>
+          {% if emp.is_active %}
+            <span class="badge badge-success">Active</span>
+          {% else %}
+            <span class="badge badge-danger">Inactive</span>
+          {% endif %}
+        </td>
+        <td class="action-btns">
+          {% if emp.employee_id != session.employee_id %}
+          <form method="POST" style="display:inline">
+            <input type="hidden" name="action" value="toggle"/>
+            <input type="hidden" name="employee_id" value="{{ emp.employee_id }}"/>
+            <button type="submit" class="btn btn-sm btn-secondary">
+              {% if emp.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+          </form>
+          <button class="btn btn-sm btn-info"
+            onclick="changeRole({{ emp.employee_id }}, '{{ emp.full_name }}', {{ emp.role_id }})">
+            Change Role
+          </button>
+          {% else %}
+          <span class="text-muted">(You)</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty">No employees found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Change Role Modal -->
+<div id="roleModal" class="modal">
+  <div class="modal-content">
+    <h3>Change Role for <span id="role_emp_name"></span></h3>
+    <form method="POST">
+      <input type="hidden" name="action" value="change_role"/>
+      <input type="hidden" name="employee_id" id="role_emp_id"/>
+      <div class="form-group">
+        <label>New Role</label>
+        <select name="role_id" id="role_select" required>
+          {% for role in roles %}
+          <option value="{{ role.role_id }}">{{ role.role_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Update Role</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('roleModal')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function changeRole(id, name, currentRoleId) {
+  document.getElementById('role_emp_id').value   = id;
+  document.getElementById('role_emp_name').textContent = name;
+  document.getElementById('role_select').value   = currentRoleId;
+  openModal('roleModal');
+}
+</script>
+{% endblock %}
