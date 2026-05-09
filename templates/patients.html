@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header">
   <h1>Patients</h1>
-  <button class="btn btn-primary" onclick="openModal('addModal')">+ Add Patient</button>
+  <button type="button" class="btn btn-primary" onclick="openModal('addModal')">+ Add Patient</button>
 </div>
 
 <form method="GET" class="search-bar">
@@ -33,7 +33,7 @@
           {% endif %}
         </td>
         <td>
-          <button class="btn btn-sm btn-secondary"
+           <button type="button" class="btn btn-sm btn-secondary"
             onclick="editPatient(
               {{ p.patient_id }},
               '{{ p.first_name|replace("'","") }}',

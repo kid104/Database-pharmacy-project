@@ -35,7 +35,7 @@
               {% if emp.is_active %}Deactivate{% else %}Activate{% endif %}
             </button>
           </form>
-          <button class="btn btn-sm btn-info"
+          <button type="button" class="btn btn-sm btn-info"
             onclick="changeRole({{ emp.employee_id }}, '{{ emp.full_name }}', {{ emp.role_id }})">
             Change Role
           </button>

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header">
   <h1>Products</h1>
-  <button class="btn btn-primary" onclick="openModal('addModal')">+ Add Product</button>
+   <button type="button" class="btn btn-primary" onclick="openModal('addModal')">+ Add Product</button>
 </div>
 
 <form method="GET" class="search-bar">
@@ -54,13 +54,13 @@
           {% endif %}
         </td>
         <td class="action-btns">
-          <button class="btn btn-sm btn-secondary"
+          <button type="button" class="btn btn-sm btn-secondary"
             onclick="editProduct(
               {{ p.product_id }}, '{{ p.product_name|replace("'","") }}',
               '{{ p.generic_name or '' }}', '{{ p.dosage_form or '' }}',
               '{{ p.strength or '' }}', {{ p.category_id or 0 }},
               {{ p.is_prescription_only }})">Edit</button>
-          <button class="btn btn-sm btn-info"
+           <button type="button" class="btn btn-sm btn-info"
             onclick="openBatchModal({{ p.product_id }}, '{{ p.product_name|replace("'","") }}')">
             + Batch</button>
           <form method="POST" style="display:inline"
